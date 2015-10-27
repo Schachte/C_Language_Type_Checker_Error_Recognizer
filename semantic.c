@@ -377,7 +377,22 @@ void print_type_name(struct type_nameNode* typeName)
             var_assign_count+=1;
         }
     }
-    
+
+    else if (var_section_accessed == 0) {
+
+        if (typeName->type != ID)
+        {
+            // printf("%s ", reserved[typeName->type]);
+            type_assigns[types_for_types] = reserved[typeName->type];
+            types_for_types+=1;
+        }
+        else
+        {
+            // printf("%s ", typeName->id);
+            type_assigns[types_for_types] = typeName->id;
+            types_for_types+=1;
+        }
+    }
 }
 
 void print_id_list(struct id_listNode* idList)
@@ -484,34 +499,233 @@ void print_do_stmt(struct while_stmtNode* do_stmt)
 void print_condition(struct conditionNode* condition)
 {
 
-    if (condition->left_operand->tag == NUM){
-        //printf("%d", condition->left_operand->ival);
-    }
+    if (tree_parsed == 1)
+    {
 
-    else if(condition->left_operand->tag == REALNUM) {
-        //printf("%.4f", condition->left_operand->fval);
-    }
+        int i;
 
-    else if(condition->left_operand->tag == ID) {
-        //printf("%s", condition->left_operand->id);
-    }
+        if (condition->left_operand->tag == NUM){
 
-    if (condition->right_operand != NULL) {
+            // printf("LEFT OPERAND IS NUM\n");
 
-        //printf("%s", reserved[condition->relop]);
+            if (condition->right_operand->tag == REALNUM)
+            {
+                printf("ERROR CODE 3 %d", condition->lineNumberTracker);
+                error_found = 1;
+            }
 
-        if (condition->right_operand->tag == NUM){
-            //printf("%d", condition->right_operand->ival);
+            else if (condition->right_operand->tag == ID)
+            {
+
+                // printf("currently ID\n");
+                //You need to see if the ID is the same type as NUM
+                char* analyze_token = condition->right_operand->id;
+
+                // printf("ID to analyze is %s\n", analyze_token);
+
+                int index_found = -1;
+
+                //Check the variable section
+                for (i = 0; i < var_id_count; i++)
+                {
+                    if (strcmp(var_ids[i], analyze_token)==0) {
+                        index_found = i;
+                        // printf("index found at %d\n", index_found);
+                        error_found = 1;
+                        break;
+                    }
+                }
+
+                //Check the type section
+                if (index_found == -1)
+                {
+                    for (i = 0; i < type_id_count; i++)
+                    {
+                        if (strcmp(type_ids[i], analyze_token)==0) {
+                            index_found = i;
+                            // printf("index found at %d\n", index_found);
+                            error_found = 1;
+                            break;
+                        }
+                    }
+                }
+
+                if (index_found != -1){
+
+                    if (strcmp(type_assigns[index_found],"INT")!=0)
+                    {
+                        printf("ERROR CODE 3 %d", condition->lineNumberTracker);
+                        error_found=1;
+                    }
+                }
+            }
+
         }
 
-        else if(condition->right_operand->tag == REALNUM) {
-            //printf("%.4f", condition->right_operand->fval);
+        else if(condition->left_operand->tag == REALNUM && error_found == 0) {
+
+            // printf("LEFT OPERAND IS REAL NUM\n");
+
+            if (condition->right_operand->tag == NUM)
+            {
+                printf("ERROR CODE 3 %d", condition->lineNumberTracker);
+                error_found = 1;
+            }
+
+            else if (condition->right_operand->tag == ID)
+            {
+
+                // printf("RIGHT OPERAND IS ID\n");
+
+                // printf("currently ID\n");
+                //You need to see if the ID is the same type as NUM
+                char* analyze_token = condition->right_operand->id;
+
+                // printf("ID to analyze is %s\n", analyze_token);
+
+                int index_found = -1;
+
+                //Check the variable section
+                for (i = 0; i < var_id_count; i++)
+                {
+                    if (strcmp(var_ids[i], analyze_token)==0) {
+                        index_found = i;
+                        // printf("index found at %d\n", index_found);
+                        error_found = 1;
+                        break;
+                    }
+                }
+
+                //Check the type section
+                if (index_found == -1)
+                {
+                    for (i = 0; i < type_id_count; i++)
+                    {
+                        if (strcmp(type_ids[i], analyze_token)==0) {
+                            index_found = i;
+                            // printf("index found at %d\n", index_found);
+                            error_found = 1;
+                            break;
+                        }
+                    }
+                }
+
+                if (index_found != -1){
+
+                    if (strcmp(type_assigns[index_found],"FLOAT")!=0)
+                    {
+                        printf("ERROR CODE 3 %d", condition->lineNumberTracker);
+                        error_found = 1;
+                    }
+                }
+            }
         }
 
-        else if(condition->right_operand->tag == ID) {
-            //printf("%s", condition->right_operand->id);
+        else if (condition->left_operand->tag == ID && error_found == 0)
+        {
+
+
+            char * type_of_left_op = getTypeFromId(condition->left_operand->id);
+            char * type_of_right_op = "";
+
+            if (condition->right_operand != NULL){
+
+                if (condition->right_operand->tag == ID)
+                {
+                    char * type_of_right_op = getTypeFromId(condition->right_operand->id);
+                    // printf("the type of the right op is %s\n", type_of_right_op);
+
+                    if (strcmp(type_of_left_op, "IMPLICIT")!=0 && strcmp(type_of_left_op, type_of_right_op)!=0)
+                    {
+                        // printf("%s is the value of the left op\n", type_of_left_op);
+                        printf("ERROR CODE 3 %d", condition->lineNumberTracker);
+                        error_found = 1;    
+                    }
+                }
+
+                else if (condition->right_operand->tag == NUM)
+                {
+                    char * type_of_right_op = "NUM";
+
+                    if (strcmp(type_of_left_op, "IMPLICIT")!=0 && strcmp(type_of_left_op, type_of_right_op)!=0)
+                    {
+                        printf("ERROR CODE 3 %d", condition->lineNumberTracker);
+                        error_found = 1;
+                    }
+
+                    //IF LEFT IS IMPLICIT AND RIGHT ISN'T SET THE LEFT VARIABLE TYPE AS THE RIGHT VARIABLE TYPE BY INFERENCE
+
+
+                    if (strcmp(type_of_left_op, "IMPLICIT")==0 && strcmp(type_of_right_op, "IMPLICIT")!=0)
+                    {
+                        //The right operand is not an implicit type, but the left operand is, we need to infer the type of the left operand
+
+                        for (i = 0; i < var_id_count; i++)
+                        {
+                            if (strcmp(var_ids[i], condition->left_operand->id)==0)
+                            {
+                                // printf("SETTING THE LEFT OPERAND TYPE TO %s\n\n", type_of_right_op);
+                                // printf("%s was of type %s and now ", var_ids[i], var_assigns[i]);
+                                var_assigns[i] = type_of_right_op;
+                                // printf("%s is now of type %s\n\n", var_ids[i], var_assigns[i]);
+                            }
+                        }
+                    }
+                }
+
+                else if (condition->right_operand->tag == REALNUM)
+                {
+                    // printf("REAL\n");
+                    char * type_of_right_op = "REALNUM";
+
+                    if (strcmp(type_of_left_op, "IMPLICIT")!=0 && strcmp(type_of_left_op, type_of_right_op) != 0)
+                    {
+                        printf("ERROR CODE 3 %d", condition->lineNumberTracker);
+                        error_found = 1;
+                    }
+
+                    //IF LEFT IS IMPLICIT AND RIGHT ISN'T SET THE LEFT VARIABLE TYPE AS THE RIGHT VARIABLE TYPE BY INFERENCE
+
+                    if (strcmp(type_of_left_op, "IMPLICIT")==0 && strcmp(type_of_right_op, "IMPLICIT")!=0)
+                    {
+                        //The right operand is not an implicit type, but the left operand is, we need to infer the type of the left operand
+
+                        for (i = 0; i < var_id_count; i++)
+                        {
+                            if (strcmp(var_ids[i], condition->left_operand->id)==0)
+                            {
+                                // printf("SETTING THE LEFT OPERAND TYPE TO %s\n\n", type_of_right_op);
+                                // printf("%s was of type %s and now ", var_ids[i], var_assigns[i]);
+                                var_assigns[i] = type_of_right_op;
+                                // printf("%s is now of type %s\n\n", var_ids[i], var_assigns[i]);
+                            }
+                        }
+                    }
+
+                }
+
+            }
+
         }
 
+        
+        if (condition->right_operand != NULL) {
+
+            //printf("%s", reserved[condition->relop]);
+
+            if (condition->right_operand->tag == NUM){
+                //printf("%d", condition->right_operand->ival);
+            }
+
+            else if(condition->right_operand->tag == REALNUM) {
+                //printf("%.4f", condition->right_operand->fval);
+            }
+
+            else if(condition->right_operand->tag == ID) {
+                //printf("%s", condition->right_operand->id);
+            }
+
+        }
     }
 
 }
@@ -624,6 +838,7 @@ struct conditionNode* condition()
     if (t_type == NUM || t_type == ID || t_type == REALNUM) {
 
         condNde = ALLOC(struct conditionNode);
+        condNde->lineNumberTracker = line_no;
 
         if (condNde->left_operand == NULL) {
 
@@ -1415,6 +1630,51 @@ void check_var_dec_multiple() {
 }
 
 //Error Code 4
+
+void type_check_genie(struct programNode* parseTree) {
+
+    print_body(parseTree->body);
+
+}
+
+
+//Replace all redeclared definitions in the type section with their parent type
+void replacing_root_types() {
+
+    int i,j;
+
+    for (i = 0; i < type_id_count; i++)
+    {
+        for (j = 0; j < types_for_types; j++)
+        {
+            if (strcmp(type_assigns[j],type_ids[i])==0) 
+            {
+                type_assigns[j] = type_assigns[i];
+            }
+        }
+    }
+}
+
+
+//Replace all variable type assignments with the data that was manipulated from the above function
+void replacing_root_variables() {
+
+    int i, j;
+
+    for (i = 0; i < type_id_count; i++)
+    {
+        for (j = 0; j < var_assign_count; j++)
+        {
+            if (strcmp(var_assigns[j],type_ids[i])==0) 
+            {
+                var_assigns[j] = type_assigns[i];
+            }
+        }
+    }
+}
+
+
+//Error Code 4
 void check_var_dec_as_type() {
 
     int x, y;
@@ -1446,7 +1706,6 @@ void check_var_dec_as_type() {
     }
 
     else if (var_id_count < var_assign_count) {
-
 
 
         for (x = 0; x < var_assign_count; x++)
@@ -1501,6 +1760,54 @@ void check_var_dec_as_type() {
     }
 }
 
+//Function that is designed to return the type based on the id that was inputted as a param into the program
+char * getTypeFromId(char * input_id) {
+
+    //First analyze the variable section to see if it has been declared in there
+
+    int i;
+    char * current_input_type = "";
+    int input_type_has_been_found = 0;
+
+    for (i=0; i < var_id_count; i++)
+    {
+        if (strcmp(var_ids[i], input_id)==0)
+        {
+            //There has been a match with the input ID and the ID in the variable declaration section
+            //We need to analyze to see what type it is
+            current_input_type = var_assigns[i];
+            // printf("The input type of the following type is %s\n", current_input_type);
+            input_type_has_been_found = 1;
+            return current_input_type;
+        }
+    }
+
+    //If the input type has not eben found, then you need to insert the variable into the variable declaration section with the type and the name
+    //At the end of the list
+    if (input_type_has_been_found == 0) {
+
+        // printf("THIS IS AN IMPLICIT VARIABLE\n");
+        var_ids[var_id_count] = input_id;
+        var_assigns[var_id_count] = "IMPLICIT";
+        var_id_count+=1;
+        var_assign_count+=1;
+    }   
+
+    if (strcmp(current_input_type, "INT")==0)
+    {
+        current_input_type = "NUM";
+    }
+
+    if (strcmp(var_assigns[var_id_count-1], "IMPLICIT")==0)
+    {
+        return "IMPLICIT";
+    }
+    else
+    {
+        return current_input_type;
+    }
+
+}
 
 int main()
 {
@@ -1509,6 +1816,28 @@ int main()
     parseTree = program();
 
     print_parse_tree(parseTree); // This is just for debugging purposes
+
+    replacing_root_types();
+    replacing_root_variables();
+
+    tree_parsed = 1;
+
+
+    // printf("\n\n");
+
+    // for (int x = 0; x < type_id_count; x++)
+    // {
+    //     printf("%s, ", type_assigns[x]);
+    // }
+
+    // printf("\n\n\n");
+
+    // for (int i = 0 ; i < var_id_count; i++)
+    // {
+    //     printf("%s, ", var_assigns[i]);
+    // }
+
+    // printf("\n\n\n");
 
     // Check Error Code 0:
     check_duplicate_declarations();
@@ -1522,6 +1851,7 @@ int main()
     // //Check Error Code 3:
 
     //[DO THIS DURING PARSING] ??
+    type_check_genie(parseTree);
 
     // //Check Error Code 4:
     if (error_found == 0) {check_var_dec_as_type();}

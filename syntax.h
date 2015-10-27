@@ -7,10 +7,12 @@
  ----------------------------------------------------------------------------*/
 /* -------------------- GLOBAL VARIABLES -------------------- */
 
+int tree_parsed = 0;
+
 int type_id_count = 0;
 int var_id_count = 0;
 int var_assign_count = 0;
-// int types_for_types = 0;
+int types_for_types = 0;
 
 int line_number_tracker = 0;
 
@@ -18,16 +20,10 @@ int var_section_accessed = 0;
 int error_found = 0;
 
 const char *type_ids[INT_MAX];
+const char *type_assigns[INT_MAX];
+
 const char *var_ids[INT_MAX];
 const char *var_assigns[INT_MAX];
-// const char *types_for_types_assigns[INT_MAX];
-
-
-// const char* testing_type_name[INT_MAX];
-// const char* testing_type_value[INT_MAX];
-// int test_insert = 0;
-// int switched_to_var = 0;
-
 
 /* -------------------- PARSE TREE TYPES -------------------- */
 
@@ -128,6 +124,7 @@ struct conditionNode
     int relop;
     struct primaryNode* left_operand;
     struct primaryNode* right_operand;
+    int lineNumberTracker;
 };
 
 struct while_stmtNode
@@ -163,12 +160,12 @@ struct primaryNode
 struct caseNode
 {
     int num;
-    struct bodyNode* body;	// body of the case
+    struct bodyNode* body;  // body of the case
 };
 
 struct case_listNode
 {
-    struct caseNode* cas;	// case is a keyword in C/C++
+    struct caseNode* cas;   // case is a keyword in C/C++
     struct case_listNode* case_list;
 };
 
@@ -217,7 +214,13 @@ void check_var_dec_as_type();
 
 void check_pointer_array_duplicates(char * arr1[], int sizeofArr1, char * arr2[], int sizeofArr2);
 
+// void type_check_genie(struct programNode* parseTree);
+void replacing_root_types();
+void replacing_root_variables();
+
 char * getTypeOfType(char *type);
+
+char * getTypeFromId(char * input_id);
 
 /* -------------------- PARSING FUNCTIONS -------------------- */
 
